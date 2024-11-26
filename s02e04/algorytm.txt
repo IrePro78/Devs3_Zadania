@@ -1,0 +1,4 @@
+Stwórz algorytm w ts, który odczyta pliki txt, png i mp3 z katalogu pliki_fabryki, za pomocą modeli : whisper-large-v3-turbo, gtp4, DALL-E 2, następnie z odczytanych danych za pomocą modelu gpt4 posegreguj pliki według kategorii: maszyny lub ludzie, pozostałe pomiń. Na tej podstawie utwórz wynik json w takiej formie : {
+  "people": ["plik1.txt", "plik2.mp3", "plikN.png"],
+  "hardware": ["plik4.txt", "plik5.png", "plik6.mp3"],
+}

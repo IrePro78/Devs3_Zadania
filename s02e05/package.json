@@ -1,0 +1,20 @@
+{
+  "name": "content-analyzer",
+  "version": "1.0.0",
+  "description": "Analizator treści stron internetowych",
+  "main": "content-analyzer.ts",
+  "scripts": {
+    "start": "ts-node content-analyzer.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.4.1",
+    "openai": "^4.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+} 

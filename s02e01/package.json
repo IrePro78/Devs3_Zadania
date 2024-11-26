@@ -1,0 +1,23 @@
+{
+  "name": "audio-transcription",
+  "version": "1.0.0",
+  "description": "Transkrypcja plików audio",
+  "main": "transcribe.ts",
+  "scripts": {
+    "start": "ts-node transcribe.ts",
+    "analyze": "ts-node analyze_transcripts.ts",
+    "build": "tsc",
+    "dev": "nodemon --exec ts-node transcribe.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.1",
+    "groq-sdk": "^0.8.0",
+    "openai": "^4.72.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

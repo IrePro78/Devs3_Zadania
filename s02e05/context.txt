@@ -1,0 +1,7 @@
+Wygeneruj dodatkowy skrypt w ts, który odczyta pytania z https://centrala.ag3nts.org/data/9ce91d39-cedd-40fa-add8-cfa5db47b5ab/arxiv.txt i odpowie na nie wykorzystując wcześniej wygenerowany arxiv-draft.md. Wyniki zapisz jako json w poniższej formie:
+{
+    "ID-pytania-01": "krótka odpowiedź w 1 zdaniu",
+    "ID-pytania-02": "krótka odpowiedź w 1 zdaniu",
+    "ID-pytania-03": "krótka odpowiedź w 1 zdaniu",
+    "ID-pytania-NN": "krótka odpowiedź w 1 zdaniu"
+}

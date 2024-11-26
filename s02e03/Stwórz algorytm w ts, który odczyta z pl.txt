@@ -1,0 +1,4 @@
+Stwórz algorytm w ts, który odczyta z pliku tekst i stworzy na jego podstawie obraz robota
+wykorzystaj model DALL-E od openai
+Utworzony obraz zapisz w pliku o nazwie "robot.png"
+Grafika musi być w formacie PNG i mieć wymiary 1024×1024 px

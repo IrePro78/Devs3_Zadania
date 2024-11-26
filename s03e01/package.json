@@ -1,0 +1,18 @@
+{
+  "name": "keyword-generator",
+  "version": "1.0.0",
+  "description": "Generator słów kluczowych dla plików fabryki",
+  "main": "keyword-generator.ts",
+  "scripts": {
+    "start": "ts-node keyword-generator.ts"
+  },
+  "dependencies": {
+    "openai": "^4.28.0",
+    "dotenv": "^16.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+} 

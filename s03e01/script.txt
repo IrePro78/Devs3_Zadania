@@ -1,0 +1,7 @@
+Napisz algorytm w ts, instaluj wszystkie potrzebne pakiety, korzystając z katalogu z plikami "pliki_z_fabryki" odczytaj je po kolei i korzystając z modeli groq lub openai wygeneruj dla każdego pliku słowa kluczowe, wykorzystując dodatkowo kontekst z plików umieszczonych w katalogu pliki_fabryki/facts. Wyniki zapisz w formacie json:
+{
+"nazwa-pliku-01.txt":"lista, słów, kluczowych 1",
+"nazwa-pliku-02.txt":"lista, słów, kluczowych 2",
+"nazwa-pliku-03.txt":"lista, słów, kluczowych 3",
+"nazwa-pliku-NN.txt":"lista, słów, kluczowych N"
+}
