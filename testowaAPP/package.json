@@ -1,0 +1,25 @@
+{
+  "name": "testowaapp",
+  "version": "1.0.0",
+  "description": "Asystent poleceń systemowych",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/app.js",
+    "dev": "ts-node src/app.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "openai": "^4.28.0",
+    "dotenv": "^16.4.1",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}

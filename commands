@@ -1,0 +1,5 @@
+mkdir testowaAPP
+cd testowaAPP
+npm init -y
+npm install typescript @types/node openai dotenv child_process commander chalk
+npx tsc --init 

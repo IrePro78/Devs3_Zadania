@@ -1,0 +1,21 @@
+{
+  "name": "fine-tune-converter",
+  "version": "1.0.0",
+  "description": "Konwerter danych do fine-tuningu modelu GPT",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node-dev --respawn src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "openai": "^4.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+} 
