@@ -1,0 +1,4 @@
+Pytanie: Podaj adres mailowy do firmy SoftoAI
+Odpowiedź: kontakt@softoai.whatever
+Źródło: https://softo.ag3nts.org/kontakt
+---

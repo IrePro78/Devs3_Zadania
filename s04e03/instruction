@@ -1,0 +1,14 @@
+Napisz aplikację w TS, która ma za zdanie odpowiedzieć na pytania znajdujące się w pliku questions.txt.
+Umieść wszystkie pliki w folderze o nazwie s04e03.
+
+Aplikacja powinna:
+- wczytać pytania z pliku questions.txt,
+- kolejno dla każdego pytania znaleźć odpowiedź wchodząc na podany adres URL, wyświetlić pytanie i odpowiedź w konsoli
+- będąc na stronie znajdź odpowiedź na pytanie i zapisasz ją w pliku answers.txt
+- jeżeli na stronie nie ma odpowiedzi na pytanie, to za pomocą linków nawigując po stronie znajdź odpowiedź i zapisz ją w pliku answers.txt
+- zapisuj odwiedzone już strony, aby nie zaglądać na nie ponownie
+- uważaj na pętle! czyli nie wchodź na tą samą stronę dwa razy
+- zwróć uwagę na to, że odpowiedzi mogą być ukryte w innych elementach strony, np. w akordionach, tabelach, etc.
+- wykorzystaj API Firecrawl do nawigacji po stronach i openai do generowania odpowiedzi
+
+
