@@ -11,7 +11,7 @@ interface PageData {
 
 export class WebCrawler {
   private visitedUrls: Map<string, PageData> = new Map();
-  private readonly MAX_DEPTH = 4;
+  private readonly MAX_DEPTH = 3;
   private openai: OpenAI;
 
   constructor() {
@@ -35,6 +35,8 @@ export class WebCrawler {
 
   private async processPage(url: string, questions: string[], answers: Map<string, Answer>, depth: number): Promise<void> {
     const normalizedUrl = this.normalizeUrl(url);
+    
+    console.log(`🔍 Próba przetworzenia strony: ${normalizedUrl} (głębokość: ${depth})`);
     
     if (depth > this.MAX_DEPTH) {
       console.log(`🛑 Przekroczono maksymalną głębokość (${this.MAX_DEPTH}) dla: ${normalizedUrl}`);
@@ -138,14 +140,15 @@ export class WebCrawler {
           {
             role: "system",
             content: `Jesteś precyzyjnym asystentem szukającym odpowiedzi na pytanie.
-                     Szukaj odpowiedzi na pytanie w treści strony lub linków znalezionych w treści strony.
+                     Szukaj odpowiedzi na pytanie w treści strony lub adresów URL znalezionych w treści strony.
                      
                      Zwracaj szczególną uwagę na:
                      - adresy URL i interfejsy webowe
                      - nazwy firm i produktów
                      - konkretne implementacje i wdrożenia
                      - opisy projektów i realizacji
-                     
+                    
+                     Nie zwracaj pytania ani żadnych innych informacji.
                      Odpowiedz TYLKO jeśli znajdziesz dokładną informację.
                      Jeśli nie ma dokładnej odpowiedzi, odpowiedz "null".`
           },
@@ -173,13 +176,12 @@ export class WebCrawler {
 
   private getLinks(html: string, baseUrl: string): string[] {
     const links = new Set<string>();
-    // Zaktualizowany regex, aby wyciągnąć href i title
     const regex = /<a[^>]*(?:href=["']([^"']+)["'])[^>]*(?:title=["']([^"']+)["'])?[^>]*>([^<]*)<\/a>/gi;
+    
     let match;
 
     const ignoredPaths = [
-      '/blog',
-      'blog',
+     
       '/whatever',
       'whatever',
       '/loop',
@@ -219,7 +221,7 @@ export class WebCrawler {
         }
 
         // Sprawdź czy URL jest z tej samej domeny i nie jest zasobem
-        if (normalizedUrl.startsWith(CONFIG.BASE_URL) && 
+        if (normalizedUrl.includes('.ag3nts.org') && 
             !this.visitedUrls.has(normalizedUrl) &&
             !/\.(css|js|jpg|jpeg|png|gif|ico)$/.test(normalizedUrl)) {
           
@@ -230,6 +232,7 @@ export class WebCrawler {
             Text: ${linkText.trim() || 'brak'}`);
 
           links.add(normalizedUrl);
+          console.log(links);
         }
       } catch (error) {
         console.log('  ⚠️ Błąd przetwarzania linku:', error);
@@ -242,12 +245,23 @@ export class WebCrawler {
   }
 
   private cleanHtml(html: string): string {
-    return html
+    let cleanedHtml = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+    // Zamień tagi <a> na tekst z URLem bez nawiasów
+    cleanedHtml = cleanedHtml.replace(
+      /<a[^>]*href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/gi,
+      (match, href, text) => `${text} ${href}`
+    );
+
+    // Usuń pozostałe tagi HTML
+    cleanedHtml = cleanedHtml
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+
+    return cleanedHtml;
   }
 
   private savePage(url: string, content: string, links: string[]): void {

@@ -2,3 +2,13 @@ Pytanie: Podaj adres mailowy do firmy SoftoAI
 Odpowiedź: kontakt@softoai.whatever
 Źródło: https://softo.ag3nts.org/kontakt
 ---
+
+Pytanie: Jaki jest adres interfejsu webowego do sterowania robotami zrealizowanego dla klienta jakim jest firma BanAN?
+Odpowiedź: https://banan.ag3nts.org
+Źródło: https://softo.ag3nts.org/portfolio_1_c4ca4238a0b923820dcc509a6f75849b
+---
+
+Pytanie: Jakie dwa certyfikaty jakości ISO otrzymała firma SoftoAI?
+Odpowiedź: ISO 9001 oraz ISO/IEC 27001
+Źródło: https://softo.ag3nts.org/blog/sukcesy-softoai
+---
