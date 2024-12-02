@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { DronInstructionDto } from './dto/dron-instruction.dto';
 import { OpenAiService } from '../openai/openai.service';
 
@@ -7,6 +7,7 @@ export class DronController {
   constructor(private readonly openAiService: OpenAiService) {}
 
   @Post()
+  @HttpCode(200)
   public async executeDronInstruction(
     @Body() dronInstructionDto: DronInstructionDto,
   ): Promise<{ description: string }> {
@@ -19,4 +20,5 @@ export class DronController {
       description: answer,
     };
   }
+
 } 
