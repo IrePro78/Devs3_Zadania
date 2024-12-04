@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   supabase-db:
-    image: supabase/postgres
+    image: supabase/postgres:latest
     ports:
       - "5432:5432"
     environment:

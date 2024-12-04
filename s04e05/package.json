@@ -6,20 +6,33 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "convert": "ts-node src/index.ts"
+    "convert": "ts-node src/index.ts",
+    "index": "ts-node src/index-markdown.ts",
+     "supabase:init": "powershell -File ./init-db.ps1",
+    "supabase:check": "ts-node supabase/check-structure.ts",
+    "supabase:test-connection": "ts-node supabase/test-connection.ts",
+    "supabase:test-vectors": "ts-node supabase/test-vectors.ts",
+    "supabase:test-search": "ts-node supabase/test-search.ts"
   },
-  "keywords": ["html", "markdown", "converter"],
+  "keywords": [
+    "html",
+    "markdown",
+    "converter"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "turndown": "^7.1.2",
+    "@supabase/supabase-js": "^2.39.7",
+    "@types/node": "^20.11.24",
     "@types/turndown": "^5.0.4",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.1",
-    "@types/node": "^18.0.0"
+    "dotenv": "^16.4.5",
+    "openai": "^4.28.4",
+    "ts-node": "^10.9.2",
+    "turndown": "^7.1.2",
+    "typescript": "^5.3.3"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.0.0"
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0"
   }
-} 
+}

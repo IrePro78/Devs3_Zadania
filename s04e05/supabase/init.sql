@@ -4,9 +4,18 @@ create extension if not exists vector;
 -- Tabela na dokumenty z wektorami
 create table documents (
   id bigserial primary key,
-  content text not null,
-  embedding vector(3072),
-  metadata jsonb not null default '{}'::jsonb,
+  content text not null,                    -- treść fragmentu
+  embedding vector(3072),                   -- wektor dla text-embedding-3-large
+  metadata jsonb not null default '{}'::jsonb,  -- metadane (source, type, chunkIndex, totalChunks, date)
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Tabela na metadane dokumentu źródłowego
+create table source_documents (
+  id bigserial primary key,
+  title text not null,                      -- tytuł dokumentu
+  file_path text not null,                  -- ścieżka do pliku
+  total_chunks int not null,                -- liczba fragmentów
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -46,4 +55,6 @@ create index on documents
 -- Uprawnienia
 grant all on table documents to postgres;
 grant all on sequence documents_id_seq to postgres;
-grant execute on function match_documents(vector(3072), float, int) to postgres;
+grant all on table source_documents to postgres;
+grant all on sequence source_documents_id_seq to postgres;
+grant execute on function match_documents(vector(3072), float, int) to postgres; 

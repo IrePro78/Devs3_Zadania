@@ -1,9 +1,11 @@
 import { HtmlToMarkdownConverter } from './html-to-markdown';
+import { MarkdownIndexer } from './indexer';
 import { join } from 'path';
 import { readdir } from 'fs/promises';
 
-async function convertFiles(): Promise<void> {
+async function convertAndIndexFiles(): Promise<void> {
   const converter = new HtmlToMarkdownConverter();
+  const indexer = new MarkdownIndexer();
   const sourceDir = join(process.cwd(), 'source');
   const outputDir = process.cwd();
   
@@ -20,18 +22,23 @@ async function convertFiles(): Promise<void> {
       const inputPath = join(sourceDir, htmlFile);
       const outputPath = join(outputDir, htmlFile.replace('.html', '.md'));
       
+      // Konwertuj HTML na Markdown
       await converter.convertFile({
         inputPath,
         outputPath
       });
-      console.log(`Przekonwertowano ${htmlFile} na ${htmlFile.replace('.html', '.md')}`);
+      
+      // Zaindeksuj wygenerowany plik Markdown
+      await indexer.indexFile(outputPath);
+      
+      console.log(`Przetworzono i zaindeksowano ${htmlFile}`);
     }
     
-    console.log('Konwersja wszystkich plików zakończona pomyślnie!');
+    console.log('Konwersja i indeksowanie zakończone pomyślnie!');
   } catch (err) {
     console.error('Wystąpił błąd:', (err as Error).message);
     process.exit(1);
   }
 }
 
-convertFiles(); 
+convertAndIndexFiles(); 
