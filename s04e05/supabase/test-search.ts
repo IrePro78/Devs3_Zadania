@@ -1,28 +1,40 @@
-import { searchSimilarDocuments } from './client';
+import { searchSimilarDocuments, analyzeContext } from './client';
+
+interface SearchQuery {
+  question: string;
+}
 
 async function testSearch() {
-  const queries = [
-    "Co wiesz o Andrzeju?",
-    "Kiedy pojawia się GPT?",
-    "Co to jest Azazel?",
-    "Gdzie znajduje się Grudziądz?"
+  const queries: SearchQuery[] = [
+    { question: "Do którego roku przeniósł się Rafał" },
+    { question: "Kto wpadł na pomysł, aby Rafał przeniósł się w czasie?" },
+    { question: "Gdzie znalazł schronienie Rafał? Nazwij krótko to miejsce" },
+    { question: "Którego dnia Rafał ma spotkanie z Andrzejem? (format: YYYY-MM-DD)" },
+    { question: "Gdzie się chce dostać Rafał po spotkaniu z Andrzejem?" }
   ];
 
   try {
-    for (const query of queries) {
-      console.log(`\nWyszukiwanie dla zapytania: "${query}"`);
-      const results = await searchSimilarDocuments(query, 3, 0.5);
+    const answers: Record<string, string> = {};
+
+    for (const [index, query] of queries.entries()) {
+      const questionNumber = (index + 1).toString().padStart(2, '0');
+      const results = await searchSimilarDocuments(query.question, 3, 0.1);
       
-      console.log('Znalezione dokumenty:');
-      results.forEach((doc, index) => {
-        console.log(`\n${index + 1}. Podobieństwo: ${doc.similarity.toFixed(2)}`);
-        console.log(`Treść: ${doc.content}`);
-        console.log(`Metadata:`, doc.metadata);
-      });
+      const answer = results.length > 0 
+        ? await analyzeContext(results, query.question, questionNumber)
+        : 'Brak informacji';
+
+      answers[questionNumber] = answer;
     }
+
+    console.log(JSON.stringify(answers, null, 2));
+    return true;
   } catch (error) {
     console.error('Błąd podczas wyszukiwania:', error);
+    return false;
   }
 }
 
-testSearch().catch(console.error); 
+testSearch()
+  .then(success => process.exit(success ? 0 : 1))
+  .catch(() => process.exit(1)); 

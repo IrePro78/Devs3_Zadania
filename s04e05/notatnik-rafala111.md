@@ -17,16 +17,16 @@ jestem w 20... roku. To nienormalne!
 
 ![image](notatnik-rafala_files/Image_004.png)
 
-To jestem normalny. Wszystko dzieje się wokół mnie. Jestem normalny. Wiem, gdzie
-jestem i kim jestem. Jestem normalny. To wszystko wkoło. To jest normalne.
-Jestem normalny.
+To jestem normalny. Wszystko dzieje się w porządku. Jestem normalny. To jest
+rzeczywistość, jestem normalny. Wiem, gdzie jestem i kim jestem. Jestem
+normalny. To wszystko wkoło. To jest normalne. Jestem normalny.
 
 Mam na imię Rafał. Jestem normalny. Świat jest nienormalny.
 
 ![image](notatnik-rafala_files/Image_005.jpg)
 
-Spotkałem Azazela, przynajmniej tak się przedstawił. Ten człowiek twierdzi, że
-jest z przyszłości. Opowiada dziwne rzeczy, a ja mu wierzę. Nikt przecież nie
+Spotkałem Azazela, przynajmniej tak się przedstawił ten człowiek. Twierdzi, że
+jest z przyszłości. Opowiadał dziwne rzeczy, a ja mu wierzę. Nikt przecież nie
 cofnął się w czasie! Ale on wiedział o wszystkim, nad czym pracowałem z
 profesorem Majem. Dałem mu badania, które zabrałem z laboratorium.
 
@@ -123,7 +123,7 @@ pracowałem. Może czas na egzorcyzmy?
 
 ![image](notatnik-rafala_files/Image_025.png)
 
-Poszedłem na spacer. Odczuwałem ziemię pod stopami, a wokoło las, skały i śnieg.
+Poszedłem na spacer. Odczuwałem ziemię pod stopami, a wkoło las, skały i śnieg.
 Szedłem prosto. Obróciłem się w lewo i znów prosto. Kolejny zwrot w lewo i
 później znów prosto. Zatrzymałem się i obróciłem w prawo. To wszystko wykonałem
 cztery razy i początek stał się końcem. Spojrzałem na swoje białe ślady na
@@ -135,7 +135,7 @@ Iz 2:19
 
 Znalazłem miejsce schronienia. Tutaj nikt mnie nie znajdzie. To miejsce nie jest
 szczególnie oddalone od miasta, w którym spędziłem ostatnie lata. Zatrzymam się
-tu na jakiś czas. Trochę tu zimno i ciemno, ale bezpiecznie.
+tu na jakiś czas. Trochę tu zimno i ciemno, ale bezpiecznie. Jaskinia w skale.
 
 ![image](notatnik-rafala_files/Image_027.jpg)
 
@@ -167,8 +167,8 @@ odwrócić.
 
 11 listopada 2024
 
-# Zdjęcia odnalezionych fragmentów strony
 
+*Wszystko zostało zaplanowane. Jestem gotowy, a Andrzej przyjdzie tutaj niebawem. Barbara mówi, że dobrze robię i mam się nie martwić. Widziałem raport. W 2238 nie podziękują. Władza robotów W 2238 r. nie nastąpi, a sztuczna inteligencja będzie tylko narzędziem w rękach ludzi, nie na odwrót. To potwór, mówi. Wszystko się nie miesza, ale pokrywa obecne, że po wykonaniu zadania będę wykończony ze względu na moje schorzenie. Wrócę więc do decyzji. To jest nowa podróż mojej ręki. Muszę tylko poczekać na nadrzeja a poźniej użyć jego samochodu aby się dostać do Lubawy koło Grudziądza. Nie jest to daleko. Mam tylko nadzieję, że Andrzejek będzie miał jeszcze dużo paliwa. Tankowanie nie wchodzi w grę, bo nie...*
 
 ![image](notatnik-rafala_files/Image_037.png)
 

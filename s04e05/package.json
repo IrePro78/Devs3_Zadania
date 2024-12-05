@@ -8,11 +8,12 @@
     "build": "tsc",
     "convert": "ts-node src/index.ts",
     "index": "ts-node src/index-markdown.ts",
-     "supabase:init": "powershell -File ./init-db.ps1",
-    "supabase:check": "ts-node supabase/check-structure.ts",
+    "supabase:init": "powershell -File ./init-db.ps1",
+    "supabase:clean": "powershell -File ./clean-db.ps1",
     "supabase:test-connection": "ts-node supabase/test-connection.ts",
     "supabase:test-vectors": "ts-node supabase/test-vectors.ts",
-    "supabase:test-search": "ts-node supabase/test-search.ts"
+    "supabase:test-search": "ts-node supabase/test-search.ts",
+    "supabase:seed": "ts-node supabase/seed-data.ts"
   },
   "keywords": [
     "html",
@@ -29,7 +30,8 @@
     "openai": "^4.28.4",
     "ts-node": "^10.9.2",
     "turndown": "^7.1.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "undici": "^6.6.2"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.1.0",
