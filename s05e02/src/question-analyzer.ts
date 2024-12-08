@@ -23,24 +23,34 @@ export class QuestionAnalyzer {
     if (classification.parameters?.location) {
       console.log('\n=== PLACES API ===');
       const placesResponse = await this.apiClient.searchPlaces(classification.parameters.location);
-      console.log('Places response:', placesResponse);
+      // console.log('Places response:', placesResponse);
       data.places = placesResponse;
 
       if (placesResponse?.message) {
         const userNames = placesResponse.message.split(' ').filter(name => name !== 'BARBARA');
+        // console.log('Znalezione nazwy użytkowników:', userNames);
         
         console.log('\n=== DATABASE API ===');
-        const dbResponse = await this.apiClient.executeDbQuery<any>(
+        const dbResponse = await this.apiClient.executeDbQuery<User[]>(
           `SELECT * FROM users WHERE username IN ('${userNames.join("','")}')`
         );
+                
+        // console.log('Database response:', JSON.stringify(dbResponse, null, 2));
         
-        if (dbResponse.success && dbResponse.data?.reply) {
-          const users = dbResponse.data.reply;
+        if (dbResponse.success && Array.isArray(dbResponse.data)) {
+          const users = dbResponse.data;
+          // console.log('Znalezieni użytkownicy:', users);
+          
           console.log('\n=== GPS API ===');
           const userIds = users.map((user: User) => user.id);
           console.log('🔍 Pobieranie lokalizacji dla użytkowników:', userIds);
-          const gpsResponses = await this.apiClient.getMultipleUsersLocations(userIds);
+          
+          const gpsResponses = await this.apiClient.getMultipleUsersLocations(userIds, users);
+          // console.log('GPS responses:', gpsResponses);
           data.locations = gpsResponses;
+        } else {
+          console.log('⚠️ Nie udało się pobrać danych użytkowników lub dane są niepoprawne');
+          console.log('dbResponse:', dbResponse);
         }
       }
     }
@@ -50,30 +60,22 @@ export class QuestionAnalyzer {
 
   async processQuestion(question: Question): Promise<any> {
     const classification = await this.classifyQuestion(question);
-    console.log('Klasyfikacja pytania:', classification);
-
     const data = await this.gatherData(classification);
-    console.log('Zebrane dane:', data);
 
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Jesteś ekspertem od analizy danych. 
-          Na podstawie pytania i zebranych danych przygotuj odpowiedź w formacie JSON.`
-        },
-        {
-          role: "user",
-          content: `Pytanie: ${question.question}
-          Dane: ${JSON.stringify(data, null, 2)}`
-        }
-      ],
-      temperature: 0.1,
-      response_format: { type: "json_object" }
-    });
-
-    return JSON.parse(response.choices[0].message.content || '{}');
+    if (data.locations && Object.keys(data.locations).length > 0) {
+      // Wysyłamy raport do API
+      const reportResponse = await this.apiClient.sendReport(data.locations);
+      
+      // Zwracamy zarówno lokalizacje jak i odpowiedź z API raportu
+      return {
+        locations: data.locations,
+        reportResponse
+      };
+    }
+    
+    return {
+      "info": "Nie znaleziono lokalizacji dla żadnego użytkownika"
+    };
   }
 
   private async classifyQuestion(question: Question): Promise<QuestionClassification> {

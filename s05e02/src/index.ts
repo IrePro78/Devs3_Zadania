@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Question } from './types';
 import { QuestionAnalyzer } from './question-analyzer';
@@ -21,8 +21,13 @@ async function main() {
     const analyzer = new QuestionAnalyzer(process.env.OPENAI_API_KEY);
     const result = await analyzer.processQuestion(question);
 
+    // Zapisz wynik do pliku
+    const outputPath = join(__dirname, '..', 'output', 'result.json');
+    await writeFile(outputPath, JSON.stringify(result, null, 2), 'utf-8');
+    
     // Wyświetl wynik
-    console.log('Wynik:', JSON.stringify(result, null, 2));
+    // console.log('Wynik:', JSON.stringify(result, null, 2));
+    // console.log('\n✅ Wynik został zapisany do:', outputPath);
   } catch (error) {
     console.error('Wystąpił błąd:', error);
     process.exit(1);

@@ -1,5 +1,13 @@
 import { log } from 'console';
-import { User, Place, GpsLocation, ReportData, ApiResponse } from './types';
+import { User, Place, GpsLocation, ReportData, ApiResponse, Coordinates } from './types';
+
+interface GpsApiResponse {
+  code: number;
+  message: {
+    lat: number;
+    lon: number;
+  };
+}
 
 export class ApiClient {
   private readonly dbApiUrl: string;
@@ -51,22 +59,22 @@ export class ApiClient {
   }
 
   async executeDbQuery<T>(query: string): Promise<ApiResponse<T>> {
-    const response = await this.fetchApi<{ reply: T }>(this.dbApiUrl, {
+    const response = await this.fetchApi<T>(this.dbApiUrl, {
       task: "database",
       apikey: this.apiKey,
       query
     });
 
-    if (response.success && response.data) {
+    if (response && 'reply' in response && response.error === 'OK') {
       return {
         success: true,
-        data: response.data.reply
+        data: response.reply as T
       };
     }
 
     return {
       success: false,
-      error: response.error
+      error: response.error || 'Unknown error'
     };
   }
 
@@ -77,42 +85,63 @@ export class ApiClient {
     });
   }
 
-  // Metody pomocnicze wykorzystujące executeDbQuery
-  async getUserData(userId: string): Promise<ApiResponse<User>> {
-    return this.executeDbQuery<User>(`SELECT * FROM users WHERE id = '${userId}' LIMIT 1`);
-  }
-
-  async getUserPlaces(userId: string): Promise<ApiResponse<Place[]>> {
-    return this.executeDbQuery<Place[]>(`SELECT * FROM places WHERE user_id = '${userId}'`);
-  }
-
-  async getPlaceDetails(placeId: string): Promise<ApiResponse<Place>> {
-    return this.executeDbQuery<Place>(`SELECT * FROM places WHERE id = '${placeId}' LIMIT 1`);
-  }
-
-  async searchUsers(query: string): Promise<ApiResponse<User[]>> {
-    return this.executeDbQuery<User[]>(
-      `SELECT * FROM users WHERE name ILIKE '%${query}%' OR role ILIKE '%${query}%'`
-    );
+  private formatLocationResponse(results: Record<string, ApiResponse<GpsLocation>>, users: User[]): Record<string, { lat: number; lon: number }> {
+    const formattedLocations: Record<string, { lat: number; lon: number }> = {};
+    
+    for (const [userId, response] of Object.entries(results)) {
+      if (response.success && response.data) {
+        const user = users.find(u => u.id === userId);
+        if (user) {
+          formattedLocations[user.username] = {
+            lat: response.data.lat,
+            lon: response.data.lon
+          };
+        }
+      }
+    }
+    
+    return formattedLocations;
   }
 
   async getUserLocation(userId: string): Promise<ApiResponse<GpsLocation>> {
-    return this.fetchApi<GpsLocation>(this.gpsApiUrl, {
+    const rawResponse = await this.fetchApi<any>(this.gpsApiUrl, {
       task: "location",
       apikey: this.apiKey,
-      userId
+      userID: userId
     });
+
+    if (rawResponse?.code === 0 && typeof rawResponse.message === 'object') {
+      const coords = rawResponse.message as { lat: number; lon: number };
+      
+      return {
+        success: true,
+        data: {
+          lat: coords.lat,
+          lon: coords.lon
+        }
+      };
+    }
+
+    return {
+      success: false,
+      error: rawResponse.error || 'Unknown error'
+    };
   }
 
-  // Metoda pomocnicza do sprawdzania ostatniej lokalizacji wielu użytkowników
-  async getMultipleUsersLocations(userIds: string[]): Promise<Record<string, ApiResponse<GpsLocation>>> {
+  async getMultipleUsersLocations(userIds: string[], users: User[]): Promise<Record<string, { lat: number; lon: number }>> {
+    console.log('\n📍 Pobieranie lokalizacji dla użytkowników:', userIds);
     const results: Record<string, ApiResponse<GpsLocation>> = {};
     
     for (const userId of userIds) {
+      console.log(`\n🔍 Sprawdzanie lokalizacji użytkownika ${userId}`);
       results[userId] = await this.getUserLocation(userId);
+      console.log(results[userId], 'results[userId]');
     }
     
-    return results;
+    const formattedResults = this.formatLocationResponse(results, users);
+    // console.log('\n📍 Zebrane lokalizacje:', JSON.stringify(formattedResults, null, 2));
+    
+    return formattedResults;
   }
 
   async getReport(): Promise<ApiResponse<ReportData>> {
@@ -121,19 +150,12 @@ export class ApiClient {
     });
   }
 
-  async getUsersByLocation(places: any[]): Promise<string[]> {
-    const response = await this.fetchApi<string[]>(this.dbApiUrl, {
-      task: "users_by_location",
+  async sendReport(locations: Record<string, { lat: number; lon: number }>): Promise<ApiResponse<any>> {
+    return this.fetchApi(this.reportApiUrl, {
+      task: "gps",
       apikey: this.apiKey,
-      places
+      answer: locations
     });
-    return response.success && response.data ? response.data : [];
   }
 
-  async getUsersByNames(names: string[]): Promise<ApiResponse<User[]>> {
-    const namesString = names.map(name => `'${name}'`).join(',');
-    return this.executeDbQuery<User[]>(
-      `SELECT id FROM users WHERE username IN (${namesString})`
-    );
-  }
 } 

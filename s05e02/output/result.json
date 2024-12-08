@@ -1,0 +1,20 @@
+{
+  "locations": {
+    "Azazel": {
+      "lat": 50.064851459004686,
+      "lon": 19.94988170674601
+    },
+    "Rafał": {
+      "lat": 53.451974,
+      "lon": 18.759189
+    },
+    "Samuel": {
+      "lat": 53.50357079380177,
+      "lon": 19.745866344712706
+    }
+  },
+  "reportResponse": {
+    "code": 0,
+    "message": "{{FLG:COORDINATES}}"
+  }
+}
