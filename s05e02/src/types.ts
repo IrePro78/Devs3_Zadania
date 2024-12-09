@@ -12,13 +12,8 @@ export interface Place {
 }
 
 export interface GpsLocation {
-  userId: string;
-  timestamp: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  accuracy?: number;
+  lat: number;
+  lon: number;
 }
 
 export interface ApiResponse<T> {
@@ -56,4 +51,9 @@ export interface QuestionClassification {
 export interface PlaceResponse {
   code: number;
   message: string;
+}
+
+export interface GpsApiResponse {
+  code: number;
+  message: GpsLocation;
 } 
