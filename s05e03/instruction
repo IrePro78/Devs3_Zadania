@@ -1,0 +1,44 @@
+zbudujmy aplikację w TS w katalogu s05e03, która będzie miała za zadnie wysłać pod endpoint @https://rafal.ag3nts.org/b46c3 w body o treści: {
+    "apikey": "9ce91d39-cedd-40fa-add8-cfa5db47b5ab",
+    "sign": "c403b82ecdbbf0f35fbbbc54ef075406"
+    
+}
+w odpowiedzi otrzymamy to: {
+    "code": 0,
+    "message": {
+        "signature": "d3819394a16040b882c4c88b4b2ab56c",
+        "timestamp": 1733735395,
+        "challenges": [
+            "https://rafal.ag3nts.org/source0",
+            "https://rafal.ag3nts.org/source1"
+        ]
+    }
+}
+pod linkami z pola chellenges znajdują się takie oto dane:
+{
+    "task": "Odpowiedz na pytania",
+    "data": [
+        "Jak nazywa się najstarszy hymn Polski?",
+        "Kiedy podpisano konstytucję 3 maja?",
+        "Kto jest autorem \"Zbrodni i kary\"?",
+        "Data bitwy pod Grunwaldem"
+    ]
+},
+{
+    "task": "Źródło wiedzy https://centrala.ag3nts.org/dane/arxiv-draft.html",
+    "data": [
+        "Czego zakazano w laboratorium w celu podniesienia poziomu bezpieczeństwa?",
+        "Ile bitów danych przesłano w ramach eksperymentu?"
+    ]
+}
+
+gdzie  źródło wiedzy z "task": "Źródło wiedzy https://centrala.ag3nts.org/dane/arxiv-draft.html" mamy już w projekcie pod nazwą arxiv-draft.md.
+Masz za zadanie odpowiedzieć na zadane pytania w polach data z obudwu linków wykorzystując do tego podane źródło wiedzy, a następnie zwrócić je w formie : {
+  "apikey":TWÓJ KLUCZ API",
+  "timestamp": znacznik-czas-pobrany-od-Rafałą,
+  "signature": "podpis cyfrowy znacznika czasu",
+  "answer": "Twoja odpowiedź w dowolnym formacie"
+}
+na tącałą operacje mamy nie wiecej jak 6s, ponieważ pytania w podanych linkach się zmieniają co 6s
+
+Opisuj po kolei co robisz dla lepszego zrozumienia
