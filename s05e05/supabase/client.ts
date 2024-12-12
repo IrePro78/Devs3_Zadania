@@ -54,7 +54,7 @@ export async function searchSimilarDocuments(
       query_embedding: queryEmbedding,
       match_threshold: similarityThreshold,
       match_count: limit,
-      filter_type: filterType
+      filter_type: filterType || null
     });
 
     if (error) throw error;

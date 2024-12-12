@@ -1,5 +1,11 @@
 -- Włącz rozszerzenie vector
 create extension if not exists vector;
+create extension if not exists unaccent;
+
+-- Dodaj konfigurację wyszukiwania dla języka polskiego
+create text search configuration if not exists polish (copy = simple);
+alter text search configuration polish
+  alter mapping for word, asciiword with simple;
 
 -- Tabela na dokumenty źródłowe
 create table if not exists source_documents (
@@ -83,11 +89,15 @@ create index if not exists documents_transcript_idx
   on documents
   using gin (to_tsvector('polish', content));
 
--- Funkcja wyszukiwania
+-- Usuń starą funkcję
+drop function if exists match_documents;
+
+-- Dodaj nową funkcję z jednoznaczną sygnaturą
 create or replace function match_documents (
   query_embedding vector(3072),
   match_threshold float default 0.7,
-  match_count int default 5
+  match_count int default 5,
+  filter_type text default null
 )
 returns table (
   id bigint,
@@ -108,6 +118,7 @@ begin
     d.source_document_id
   from documents d
   where 1 - (d.embedding <=> query_embedding) > match_threshold
+    and (filter_type is null or d.metadata->>'media_type' = filter_type)
   order by similarity desc
   limit match_count;
 end;
@@ -166,10 +177,10 @@ begin
     d.content,
     d.metadata,
     d.source_document_id,
-    ts_rank(to_tsvector('polish', d.content), plainto_tsquery('polish', search_query)) as rank
+    ts_rank(to_tsvector('simple', d.content), plainto_tsquery('simple', search_query)) as rank
   from documents d
   where 
-    to_tsvector('polish', d.content) @@ plainto_tsquery('polish', search_query)
+    to_tsvector('simple', d.content) @@ plainto_tsquery('simple', search_query)
     and (media_type is null or d.metadata->>'media_type' = media_type)
   order by rank desc;
 end;

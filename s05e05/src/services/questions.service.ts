@@ -1,55 +1,97 @@
+import { OpenAI } from 'openai';
 import * as fs from 'fs/promises';
-import * as path from 'path';
-import { Questions } from '../interfaces/questions.interface';
+import { searchSimilarDocuments, searchTranscripts } from '../../supabase/client';
+
+interface StoryQuestion {
+  [key: string]: string;
+}
 
 export class QuestionsService {
-  private readonly dataDir = 'data/questions';
-  private readonly fileName = 'questions.json';
+  private openai: OpenAI;
+  private readonly CONTEXT_LIMIT = 3;
 
   constructor() {
-    fs.mkdir(this.dataDir, { recursive: true });
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
   }
 
-  public async downloadAndSaveQuestions(): Promise<void> {
-    const { API_KEY } = process.env;
-    if (!API_KEY) {
-      throw new Error('API_KEY is not defined in environment variables');
-    }
-
-    const url = `https://centrala.ag3nts.org/data/${API_KEY}/story.json`;
-
+  async processQuestions(questionsPath: string, outputPath: string): Promise<void> {
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Wczytaj pytania
+      const questions = await this.loadQuestions(questionsPath);
+      const answers: string[] = [];
+
+      // Przetwórz każde pytanie w kolejności
+      const sortedIds = Object.keys(questions).sort();
+      for (const id of sortedIds) {
+        const question = questions[id];
+        console.log(`\nPrzetwarzanie pytania ${id}: ${question}`);
+        
+        // Łączymy wyniki z obu typów wyszukiwania
+        const [vectorResults, textResults] = await Promise.all([
+          searchSimilarDocuments(question, this.CONTEXT_LIMIT),
+          searchTranscripts(question)
+        ]);
+
+        // Łączymy i deduplikujemy wyniki
+        const allResults = [...vectorResults, ...textResults];
+        const uniqueResults = this.deduplicateResults(allResults);
+        const context = uniqueResults.map(doc => doc.content).join('\n\n');
+
+        // Wygeneruj odpowiedź
+        const answer = await this.generateAnswer(question, context);
+        answers.push(answer);
+
+        console.log(`✓ Zapisano odpowiedź dla pytania ${id}`);
       }
-      const questions = await response.json() as Questions;
-      
-      const filePath = path.join(this.dataDir, this.fileName);
-      await fs.writeFile(filePath, JSON.stringify(questions, null, 2));
-      console.log(`Questions saved to ${filePath}`);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(`Failed to fetch and save questions: ${error.message}`);
-      } else {
-        console.error('Failed to fetch and save questions: Unknown error');
-      }
+
+      // Zapisz odpowiedzi do pliku
+      await fs.writeFile(outputPath, JSON.stringify(answers, null, 2), 'utf-8');
+      console.log(`\n✓ Zapisano wszystkie odpowiedzi do ${outputPath}`);
+
+    } catch (error) {
+      console.error('Błąd podczas przetwarzania pytań:', error);
       throw error;
     }
   }
 
-  public async readQuestions(): Promise<Questions> {
-    const filePath = path.join(this.dataDir, this.fileName);
-    try {
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      return JSON.parse(fileContent) as Questions;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(`Failed to read questions file: ${error.message}`);
-      } else {
-        console.error('Failed to read questions file: Unknown error');
-      }
-      throw error;
+  private async loadQuestions(path: string): Promise<StoryQuestion> {
+    const content = await fs.readFile(path, 'utf-8');
+    return JSON.parse(content);
+  }
+
+  private async generateAnswer(question: string, context: string): Promise<string> {
+    if (!context.trim()) {
+      return "Brak wyniku";
     }
+
+    const response = await this.openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Jesteś ekspertem w udzielaniu odpowiedzi na pytania wyszukując w treści wyszukiwań z bazy wektorowej. Udzielaj bardzo krótkich, odpowiedzi w kontekście, odpowiedz 'Brak wyniku'."
+        },
+        {
+          role: "user",
+          content: `Kontekst:\n${context}\n\nPytanie: ${question}\n\nOdpowiedz jednym zdaniem lub 'Brak wyniku'.`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 50
+    });
+
+    const answer = response.choices[0].message.content?.trim() || 'Brak wyniku';
+    return answer === '' ? 'Brak wyniku' : answer;
+  }
+
+  private deduplicateResults(results: any[]): any[] {
+    const seen = new Set();
+    return results.filter(doc => {
+      const isDuplicate = seen.has(doc.content);
+      seen.add(doc.content);
+      return !isDuplicate;
+    });
   }
 } 

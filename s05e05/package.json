@@ -12,7 +12,8 @@
     "supabase:test-connection": "ts-node supabase/test-connection.ts",
     "supabase:test-vectors": "ts-node supabase/test-vectors.ts",
     "supabase:test-search": "ts-node supabase/test-search.ts",
-    "supabase:seed": "ts-node supabase/seed-data.ts"
+    "supabase:seed": "ts-node supabase/seed-data.ts",
+    "process-questions": "ts-node src/process-questions.ts"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
