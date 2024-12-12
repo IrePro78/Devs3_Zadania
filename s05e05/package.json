@@ -13,23 +13,26 @@
     "supabase:test-vectors": "ts-node supabase/test-vectors.ts",
     "supabase:test-search": "ts-node supabase/test-search.ts",
     "supabase:seed": "ts-node supabase/seed-data.ts"
-    
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@supabase/supabase-js": "^2.39.7",
     "@types/node": "^20.11.24",
     "@types/turndown": "^5.0.4",
     "dotenv": "^16.4.5",
+    "fluent-ffmpeg": "^2.1.2",
     "openai": "^4.28.4",
+    "sharp": "^0.32.0",
     "ts-node": "^10.9.2",
     "turndown": "^7.1.2",
     "typescript": "^5.3.3",
     "undici": "^6.6.2"
   },
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.27",
     "@types/node": "^20.3.1",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.1.3"
   }
-} 
+}

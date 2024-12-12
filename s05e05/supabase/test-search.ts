@@ -1,4 +1,4 @@
-import { searchSimilarDocuments, analyzeContext } from './client';
+import { searchSimilarDocuments } from './client';
 
 interface SearchQuery {
   question: string;
@@ -20,14 +20,13 @@ async function testSearch() {
       const questionNumber = (index + 1).toString().padStart(2, '0');
       const results = await searchSimilarDocuments(query.question, 3, 0.1);
       
-      const answer = results.length > 0 
-        ? await analyzeContext(results, query.question, questionNumber)
-        : 'Brak informacji';
-
-      answers[questionNumber] = answer;
+      console.log(`\nWyniki dla pytania ${questionNumber}:`);
+      results.forEach((doc, i) => {
+        console.log(`\n${i + 1}. Podobieństwo: ${doc.similarity.toFixed(2)}`);
+        console.log(`Treść: ${doc.content}`);
+      });
     }
 
-    console.log(JSON.stringify(answers, null, 2));
     return true;
   } catch (error) {
     console.error('Błąd podczas wyszukiwania:', error);

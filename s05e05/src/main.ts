@@ -1,33 +1,84 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { FileContent, FileType } from './interfaces/file.interface';
 import { config } from 'dotenv';
+import { VectorizationService } from './services/vectorization.service';
 
-import { AIService } from './services/ai.service';
-import { QuestionsService } from './services/questions.service';
+async function loadFile(filePath: string): Promise<FileContent> {
+  const ext = path.extname(filePath).toLowerCase();
+  const type = getFileType(ext);
+  
+  // Dla plików binarnych
+  if (type === 'audio' || type === 'image') {
+    const binary = await fs.readFile(filePath);
+    return {
+      path: filePath,
+      type,
+      content: '', // Puste dla plików binarnych
+      binary
+    };
+  }
+  
+  // Dla plików tekstowych
+  const content = await fs.readFile(filePath, 'utf-8');
+  return {
+    path: filePath,
+    type,
+    content
+  };
+}
+
+function getFileType(ext: string): FileType {
+  switch (ext) {
+    case '.json':
+      return 'json';
+    case '.md':
+      return 'markdown';
+    case '.mp3':
+    case '.m4a':
+    case '.wav':
+      return 'audio';
+    case '.png':
+    case '.jpg':
+    case '.jpeg':
+      return 'image';
+    default:
+      return 'text';
+  }
+}
+
+async function processDirectory(dirPath: string): Promise<FileContent[]> {
+  const files = await fs.readdir(dirPath, { withFileTypes: true });
+  const results: FileContent[] = [];
+
+  for (const file of files) {
+    const fullPath = path.join(dirPath, file.name);
+    
+    if (file.isDirectory()) {
+      const subDirFiles = await processDirectory(fullPath);
+      results.push(...subDirFiles);
+    } else {
+      try {
+        const fileContent = await loadFile(fullPath);
+        results.push(fileContent);
+      } catch (error) {
+        console.error(`Błąd wczytywania pliku ${fullPath}:`, error);
+      }
+    }
+  }
+
+  return results;
+}
 
 async function main(): Promise<void> {
   config();
 
-  const questionsService = new QuestionsService();
-  const aiService = new AIService();
-
   try {
-    await questionsService.downloadAndSaveQuestions();
-    const questions = await questionsService.readQuestions();
-    
-    console.log('Processing questions with AI...\n');
-    
-    for (const question of questions) {
-      console.log(`Question: ${question}`);
-      const aiResponse = await aiService.getResponse(question);
-      console.log('AI Response:', aiResponse);
-      console.log('---\n');
-    }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(`Application failed: ${error.message}`);
-    } else {
-      console.error('Application failed: Unknown error');
-    }
-    process.exit(1);
+    const files = await processDirectory('./data/stories');
+    const vectorizationService = new VectorizationService();
+    await vectorizationService.vectorizeFiles(files);
+  } catch (error) {
+    console.error('Błąd podczas przetwarzania:', error);
   }
 }
 

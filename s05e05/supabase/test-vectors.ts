@@ -1,4 +1,4 @@
-import { insertDocumentWithEmbedding, searchSimilarDocuments, supabase } from './client';
+import { createEmbedding, searchSimilarDocuments, supabase } from './client';
 
 async function testVectors() {
   try {
@@ -6,49 +6,74 @@ async function testVectors() {
 
     // Wyczyść tabelę przed testem
     const { error: clearError } = await supabase
-      .from('documents')
+      .from('source_documents')
       .delete()
-      .eq('metadata->source', 'test');
+      .eq('metadata->test', true);
 
     if (clearError) {
       throw clearError;
     }
 
-    // Test dodawania dokumentu
-    const testContent = "To jest testowy fragment tekstu z notatnika Rafała o podróżach w czasie.";
-    const metadata = {
-      source: 'test',
-      type: 'diary',
-      chunkIndex: 0,
-      totalChunks: 1,
-      date: new Date().toISOString()
+    // Test dodawania dokumentu źródłowego z transkrypcją rozmowy
+    const testContent = {
+      "rozmowa1": [
+        "- Hej! Jak się masz?",
+        "- Dziękuję, dobrze. Co słychać?"
+      ]
     };
 
-    await insertDocumentWithEmbedding(testContent, metadata);
-    console.log('✓ Test dodawania dokumentu: OK');
+    const sourceMetadata = {
+      test: true,
+      conversations: 1
+    };
 
-    // Sprawdź czy dokument został dodany
-    const { data: docs, error: selectError } = await supabase
+    // Dodaj dokument źródłowy
+    const { data: sourceDoc, error: sourceError } = await supabase
+      .from('source_documents')
+      .insert({
+        title: 'test-conversation.json',
+        file_path: 'test/conversation.json',
+        document_type: 'json',
+        original_content: JSON.stringify(testContent),
+        total_chunks: 0,
+        metadata: sourceMetadata
+      })
+      .select()
+      .single();
+
+    if (sourceError) throw sourceError;
+    console.log('✓ Test dodawania dokumentu źródłowego: OK');
+
+    // Test dodawania fragmentu z wektorem
+    const chunk = Object.values(testContent)[0].join('\n');
+    const embedding = await createEmbedding(chunk);
+
+    const { error: chunkError } = await supabase
       .from('documents')
-      .select('*')
-      .eq('metadata->source', 'test');
+      .insert({
+        content: chunk,
+        embedding,
+        metadata: { chunk_index: 0, total_chunks: 1 },
+        source_document_id: sourceDoc.id
+      });
 
-    if (selectError) throw selectError;
-
-    if (!docs || docs.length === 0) {
-      throw new Error('Nie znaleziono dodanego dokumentu');
-    }
-
-    console.log('✓ Test odczytu dokumentu: OK');
+    if (chunkError) throw chunkError;
+    console.log('✓ Test dodawania fragmentu z wektorem: OK');
 
     // Test wyszukiwania
-    const results = await searchSimilarDocuments("podróże w czasie", 3, 0.5);
+    const results = await searchSimilarDocuments(
+      "rozmowa telefoniczna", 
+      3,
+      0.5,
+      'phone'
+    );
+
     console.log('\nTest wyszukiwania podobnych dokumentów:');
-    
     if (results.length > 0) {
       results.forEach((doc, i) => {
         console.log(`\n${i + 1}. Podobieństwo: ${doc.similarity.toFixed(2)}`);
         console.log(`Treść: ${doc.content}`);
+        console.log(`Typ dokumentu: ${doc.document_type}`);
         console.log(`Metadata:`, doc.metadata);
       });
       console.log('✓ Test wyszukiwania: OK');

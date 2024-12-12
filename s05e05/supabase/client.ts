@@ -16,23 +16,7 @@ if (!supabaseUrl || !supabaseKey) {
   `);
 }
 
-console.log('Inicjalizacja klienta Supabase z:', {
-  url: supabaseUrl,
-  keyLength: supabaseKey.length
-});
-
-// Stwórz klienta z podstawową konfiguracją
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Test połączenia przy inicjalizacji
-(async () => {
-  try {
-    await supabase.from('documents').select('count').single();
-    console.log('✓ Połączenie z Supabase nawiązane');
-  } catch (error: any) {
-    console.error('✗ Błąd połączenia z Supabase:', error.message);
-  }
-})();
 
 // OpenAI setup
 if (!process.env.OPENAI_API_KEY) {
@@ -56,33 +40,11 @@ export async function createEmbedding(text: string): Promise<number[]> {
   }
 }
 
-export async function insertDocumentWithEmbedding(
-  content: string,
-  metadata?: Record<string, any>
-): Promise<void> {
-  try {
-    console.log('Tworzenie embeddingu dla tekstu...');
-    const embedding = await createEmbedding(content);
-    
-    console.log('Dodawanie dokumentu do bazy...');
-    const { error } = await supabase.from('documents').insert({
-      content,
-      embedding,
-      metadata
-    });
-
-    if (error) throw error;
-    console.log('✓ Dokument został pomyślnie dodany');
-  } catch (error) {
-    console.error('Błąd podczas dodawania dokumentu:', error);
-    throw error;
-  }
-}
-
 export async function searchSimilarDocuments(
   queryText: string,
   limit: number = 5,
-  similarityThreshold: number = 0.1
+  similarityThreshold: number = 0.1,
+  filterType?: string
 ): Promise<any[]> {
   try {
     console.log('Wyszukiwanie semantyczne...');
@@ -91,7 +53,8 @@ export async function searchSimilarDocuments(
     const { data, error } = await supabase.rpc('match_documents', {
       query_embedding: queryEmbedding,
       match_threshold: similarityThreshold,
-      match_count: limit
+      match_count: limit,
+      filter_type: filterType
     });
 
     if (error) throw error;
@@ -102,32 +65,17 @@ export async function searchSimilarDocuments(
   }
 }
 
-export async function analyzeContext(results: any[], queryText: string, questionNumber: string): Promise<string> {
-  if (results.length === 0) return 'Brak informacji';
+export async function searchTranscripts(query: string, mediaType?: string) {
+  const { data, error } = await supabase
+    .rpc('search_transcripts', { 
+      search_query: query,
+      media_type: mediaType 
+    });
 
-  const context = results.map(r => r.content).join('\n\n');
-  
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: `Jesteś precyzyjnym asystentem odpowiadającym na pytania.
-- Odpowiadaj maksymalnie zwięźle, najlepiej jednym słowem lub datą
-- Na pytanie o rok weźpod uwagę wszystkie fakty z kontekstu
-- Na pytania o datę odpowiadaj w formacie YYYY-MM-DD
-- Na pytania o miejsce odpowiadaj samą nazwą miejsca
-- Na pytania o osobę odpowiadaj samym imieniem
-- Jeśli nie ma informacji, odpowiedz "Brak informacji"
-- Nie dodawaj żadnych wyjaśnień ani kontekstu
-- zanim odpowiesz, zastanów się`
-      },
-      {
-        role: "user",
-        content: `Kontekst:\n${context}\n\nPytanie: ${queryText}\n\nPodaj samą odpowiedź:`
-      }
-    ]
-  });
+  if (error) throw error;
+  return data;
+}
 
-  return response.choices[0].message.content?.trim() || 'Błąd analizy';
-} 
+// Przykład użycia:
+// const audioResults = await searchTranscripts('ważna rozmowa', 'audio');
+// const imageResults = await searchTranscripts('czerwony samochód', 'image');
