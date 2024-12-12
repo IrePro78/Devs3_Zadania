@@ -5,32 +5,94 @@ import * as sharp from 'sharp';
 import * as fs from 'fs/promises';
 import { createReadStream } from 'fs';
 import * as path from 'path';
+import { OpenAIService } from './openai.service';
+import { withRetry } from '../utils/retry';
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
+const CHUNK_SIZE_MB = 8; // Bezpieczny rozmiar chunka
 
 export class MediaService {
   private openai: OpenAI;
   private tempDir: string;
+  private openaiService: OpenAIService;
 
   constructor() {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
     this.tempDir = path.join(process.cwd(), 'temp');
+    this.openaiService = new OpenAIService();
   }
 
-  async transcribeAudio(buffer: Buffer, format: string): Promise<string> {
-    // Konwertuj do WAV jeśli potrzeba
-    const wavFile = await this.convertToWav(buffer, format);
-    
-    const response = await this.openai.audio.transcriptions.create({
-      file: createReadStream(wavFile),
-      model: "whisper-1",
-      language: "pl"
-    });
+  async transcribeAudio(buffer: Buffer, extension: string): Promise<string> {
+    try {
+      // Zapisz bufor do pliku tymczasowego
+      const tempDir = path.join(process.cwd(), 'temp');
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      const inputFile = path.join(tempDir, `input.${extension}`);
+      await fs.writeFile(inputFile, buffer);
 
-    await fs.unlink(wavFile);
-    return response.text;
+      // Sprawdź rozmiar pliku
+      const stats = await fs.stat(inputFile);
+      const fileSizeMB = stats.size / (1024 * 1024);
+
+      let transcription: string;
+      if (fileSizeMB <= CHUNK_SIZE_MB) {
+        // Dla małych plików używaj standardowej metody
+        transcription = await this.openaiService.transcribeAudio(inputFile);
+      } else {
+        // Dla dużych plików, podziel i przetranscryptuj części
+        console.log(`Dzielę duży plik audio (${fileSizeMB.toFixed(2)}MB) na części...`);
+        const chunks = await this.splitAudioFile(inputFile, tempDir);
+        
+        // Przetranscryptuj każdą część
+        const transcriptions = await Promise.all(
+          chunks.map(chunk => this.openaiService.transcribeAudio(chunk))
+        );
+
+        // Połącz transkrypcje
+        transcription = transcriptions.join(' ');
+
+        // Wyczyść pliki tymczasowe
+        await Promise.all(chunks.map(chunk => fs.unlink(chunk)));
+      }
+
+      // Wyczyść plik wejściowy
+      await fs.unlink(inputFile);
+      
+      return transcription;
+    } catch (error) {
+      console.error('Błąd podczas transkrypcji:', error);
+      throw error;
+    }
+  }
+
+  private splitAudioFile(inputFile: string, outputDir: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const chunks: string[] = [];
+
+      ffmpeg(inputFile)
+        .outputOptions([
+          `-f segment`,
+          `-segment_time ${300}`, // 5 minut na chunk
+          `-c copy`               // Kopiuj bez przekodowania
+        ])
+        .on('end', () => resolve(chunks))
+        .on('error', reject)
+        .on('start', (cmd) => console.log('Rozpoczęto dzielenie pliku:', cmd))
+        .on('progress', (progress) => {
+          console.log(`Przetwarzanie: ${progress.percent}%`);
+        })
+        .output(path.join(outputDir, `chunk_%03d.${path.extname(inputFile).slice(1)}`))
+        .on('filenames', (filenames) => {
+          filenames.forEach(filename => {
+            chunks.push(path.join(outputDir, filename));
+          });
+        })
+        .run();
+    });
   }
 
   async analyzeImage(buffer: Buffer): Promise<string> {

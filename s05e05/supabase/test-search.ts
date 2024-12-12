@@ -1,4 +1,4 @@
-import { searchSimilarDocuments } from './client';
+import { searchWithMetadata } from './client';
 
 interface SearchQuery {
   question: string;
@@ -6,25 +6,33 @@ interface SearchQuery {
 
 async function testSearch() {
   const queries: SearchQuery[] = [
-    { question: "Do którego roku przeniósł się Rafał" },
-    { question: "Kto wpadł na pomysł, aby Rafał przeniósł się w czasie?" },
-    { question: "Gdzie znalazł schronienie Rafał? Nazwij krótko to miejsce" },
-    { question: "Którego dnia Rafał ma spotkanie z Andrzejem? (format: YYYY-MM-DD)" },
-    { question: "Gdzie się chce dostać Rafał po spotkaniu z Andrzejem?" }
+    { question: "Co Rafał robił w piwnicy?" },
+    { question: "Jakie eksperymenty prowadził profesor?" },
+    { question: "Co znaleziono w laboratorium?" },
+    { question: "Kto pomógł Rafałowi?" }
   ];
 
   try {
-    const answers: Record<string, string> = {};
+    console.log('Rozpoczynam test wyszukiwania...\n');
 
     for (const [index, query] of queries.entries()) {
       const questionNumber = (index + 1).toString().padStart(2, '0');
-      const results = await searchSimilarDocuments(query.question, 3, 0.1);
+      console.log(`\nPytanie ${questionNumber}: "${query.question}"`);
+
+      const results = await searchWithMetadata(
+        query.question,
+        0.1,  // Niski próg podobieństwa
+        3     // Mniej wyników, ale bardziej trafnych
+      );
       
-      console.log(`\nWyniki dla pytania ${questionNumber}:`);
-      results.forEach((doc, i) => {
-        console.log(`\n${i + 1}. Podobieństwo: ${doc.similarity.toFixed(2)}`);
-        console.log(`Treść: ${doc.content}`);
-      });
+      if (results.length > 0) {
+        results.forEach((doc, i) => {
+          console.log(`\n${i + 1}. Podobieństwo: ${doc.similarity.toFixed(3)}`);
+          console.log(`Treść: ${doc.content}`);
+        });
+      } else {
+        console.log('Nie znaleziono odpowiedzi.');
+      }
     }
 
     return true;
@@ -34,6 +42,16 @@ async function testSearch() {
   }
 }
 
+console.log('='.repeat(80));
+console.log('Test wyszukiwania semantycznego');
+console.log('='.repeat(80));
+
 testSearch()
-  .then(success => process.exit(success ? 0 : 1))
-  .catch(() => process.exit(1)); 
+  .then(success => {
+    console.log('\nTest zakończony:', success ? 'SUKCES' : 'BŁĄD');
+    process.exit(success ? 0 : 1);
+  })
+  .catch(error => {
+    console.error('\nBłąd krytyczny:', error);
+    process.exit(1);
+  }); 

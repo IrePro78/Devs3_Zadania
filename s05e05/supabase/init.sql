@@ -1,5 +1,11 @@
 -- Włącz rozszerzenie vector
 create extension if not exists vector;
+create extension if not exists unaccent;
+
+-- Dodaj konfigurację wyszukiwania dla języka polskiego
+create text search configuration if not exists polish (copy = simple);
+alter text search configuration polish
+  alter mapping for word, asciiword with simple;
 
 -- Tabela na dokumenty źródłowe
 create table if not exists source_documents (
@@ -13,7 +19,13 @@ create table if not exists source_documents (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   media_type text,
   duration integer,
-  dimensions text
+  dimensions text,
+  processing_status text default 'raw',
+  importance_score float default 0.0,
+  confidence_score float default 0.0,
+  word_count integer default 0,
+  access_level text default 'public',
+  version text default '1.0'
 );
 
 -- Tabela na fragmenty tekstu z wektorami
@@ -83,11 +95,47 @@ create index if not exists documents_transcript_idx
   on documents
   using gin (to_tsvector('polish', content));
 
--- Funkcja wyszukiwania
+-- Dodaj nowe indeksy dla lepszego wyszukiwania kontekstowego
+create index if not exists documents_conversation_idx 
+  on documents((metadata->>'conversation_id'));
+
+create index if not exists documents_message_index_idx 
+  on documents((metadata->>'message_index'));
+
+create index if not exists documents_entities_idx 
+  on documents using gin ((metadata->'entities'));
+
+create index if not exists documents_temporal_idx 
+  on documents using gin ((metadata->'temporal_references'));
+
+-- Dodaj nowe indeksy dla metadanych
+create index if not exists documents_entities_persons_idx 
+  on documents using gin ((metadata->'entities'->'persons'));
+
+create index if not exists documents_entities_locations_idx 
+  on documents using gin ((metadata->'entities'->'locations'));
+
+create index if not exists documents_temporal_dates_idx 
+  on documents using gin ((metadata->'temporal'->'absolute_dates'));
+
+create index if not exists documents_topics_idx 
+  on documents using gin ((metadata->'topics'));
+
+create index if not exists documents_importance_idx 
+  on documents(((metadata->>'importance_score')::float));
+
+create index if not exists documents_confidence_idx 
+  on documents(((metadata->>'confidence_score')::float));
+
+-- Usuń starą funkcję
+drop function if exists match_documents;
+
+-- Dodaj nową funkcję z jednoznaczną sygnaturą
 create or replace function match_documents (
   query_embedding vector(3072),
   match_threshold float default 0.7,
-  match_count int default 5
+  match_count int default 5,
+  filter_type text default null
 )
 returns table (
   id bigint,
@@ -108,6 +156,7 @@ begin
     d.source_document_id
   from documents d
   where 1 - (d.embedding <=> query_embedding) > match_threshold
+    and (filter_type is null or d.metadata->>'media_type' = filter_type)
   order by similarity desc
   limit match_count;
 end;
@@ -166,12 +215,124 @@ begin
     d.content,
     d.metadata,
     d.source_document_id,
-    ts_rank(to_tsvector('polish', d.content), plainto_tsquery('polish', search_query)) as rank
+    ts_rank(to_tsvector('simple', d.content), plainto_tsquery('simple', search_query)) as rank
   from documents d
   where 
-    to_tsvector('polish', d.content) @@ plainto_tsquery('polish', search_query)
+    to_tsvector('simple', d.content) @@ plainto_tsquery('simple', search_query)
     and (media_type is null or d.metadata->>'media_type' = media_type)
   order by rank desc;
+end;
+$$;
+
+-- Funkcja do wyszukiwania z uwzględnieniem kontekstu
+create or replace function search_with_context(
+  query_embedding vector(3072),
+  match_threshold float,
+  match_count int,
+  require_context boolean default true
+)
+returns table (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float,
+  context_before text,
+  context_after text
+)
+language plpgsql
+as $$
+begin
+  return query
+  with matches as (
+    select
+      d.id,
+      d.content,
+      d.metadata,
+      1 - (d.embedding <=> query_embedding) as similarity,
+      d.source_document_id
+    from documents d
+    where 1 - (d.embedding <=> query_embedding) > match_threshold
+  ),
+  context as (
+    select
+      m.*,
+      lag(d.content) over w as context_before,
+      lead(d.content) over w as context_after
+    from matches m
+    left join documents d on 
+      d.metadata->>'conversation_id' = m.metadata->>'conversation_id'
+    window w as (
+      partition by m.metadata->>'conversation_id' 
+      order by (m.metadata->>'message_index')::int
+    )
+  )
+  select
+    c.id,
+    c.content,
+    c.metadata,
+    c.similarity,
+    coalesce(c.context_before, '') as context_before,
+    coalesce(c.context_after, '') as context_after
+  from context c
+  where not require_context or (c.context_before is not null or c.context_after is not null)
+  order by c.similarity desc
+  limit match_count;
+end;
+$$;
+
+-- Funkcja do wyszukiwania z filtrowaniem po metadanych
+create or replace function search_with_metadata(
+  query_embedding vector(3072),
+  match_threshold float default 0.1,
+  match_count int default 5,
+  filter_params jsonb default '{}'
+) returns table (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    d.id,
+    d.content,
+    d.metadata,
+    1 - (d.embedding <=> query_embedding) as similarity
+  from documents d
+  where 1 - (d.embedding <=> query_embedding) > match_threshold
+  order by similarity desc
+  limit match_count;
+end;
+$$;
+
+-- Dodaj funkcję testową do sprawdzenia embeddingów
+create or replace function check_embeddings()
+returns table (
+  doc_count bigint,
+  avg_embedding_length int,
+  sample_content text,
+  sample_similarity float
+)
+language sql
+as $$
+  select 
+    count(*) as doc_count,
+    avg(array_length(embedding, 1)) as avg_embedding_length,
+    min(content) as sample_content,
+    1 - (min(embedding) <=> min(embedding)) as sample_similarity
+  from documents;
+$$;
+
+-- Dodaj funkcję do przeładowania cache'u
+create or replace function reload_schema_cache()
+returns void
+language plpgsql
+as $$
+begin
+  notify pgrst, 'reload schema';
 end;
 $$;
 
@@ -183,3 +344,6 @@ grant execute on all functions in schema public to postgres;
 -- Wyczyść istniejące dane
 truncate table documents cascade;
 truncate table source_documents cascade;
+
+-- Nadaj uprawnienia
+grant execute on function check_embeddings() to postgres;

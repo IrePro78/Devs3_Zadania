@@ -69,28 +69,16 @@ async function loadTestFiles(): Promise<FileContent[]> {
 
 async function main() {
   try {
-    console.log('Rozpoczynam ładowanie plików...');
+    console.log('Rozpoczynam seedowanie bazy danych...');
+    
     const files = await loadTestFiles();
-    console.log(`Załadowano ${files.length} plików`);
-
-    // Wyświetl statystyki plików
-    const stats = files.reduce((acc, file) => {
-      acc[file.type] = (acc[file.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    console.log('\nTypy znalezionych plików:');
-    Object.entries(stats).forEach(([type, count]) => {
-      console.log(`${type}: ${count}`);
-    });
-
-    console.log('\nRozpoczynam wektoryzację...');
     const vectorizationService = new VectorizationService();
     await vectorizationService.vectorizeFiles(files);
-
-    console.log('\n✓ Zakończono wektoryzację plików');
+    
+    console.log('Zakończono seedowanie bazy danych');
+    process.exit(0);
   } catch (error) {
-    console.error('Błąd podczas seedowania danych:', error);
+    console.error('Błąd podczas seedowania:', error);
     process.exit(1);
   }
 }
