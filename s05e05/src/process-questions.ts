@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { QuestionsService } from './services/questions.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -40,6 +41,26 @@ async function main() {
 
   } catch (error) {
     console.error('Błąd podczas przetwarzania pytań:', error);
+=======
+import { config } from 'dotenv';
+import { QuestionsService } from './services/questions.service';
+import * as path from 'path';
+
+config();
+
+async function main() {
+  try {
+    const questionsService = new QuestionsService();
+    const questionsPath = path.join('data', 'story.json');
+    const outputPath = path.join('data', 'answers.json');
+
+    console.log('Rozpoczynam przetwarzanie pytań...');
+    await questionsService.processQuestions(questionsPath, outputPath);
+    console.log('\n✓ Zakończono przetwarzanie pytań');
+
+  } catch (error) {
+    console.error('Błąd podczas przetwarzania:', error);
+>>>>>>> 1d11fc25fab466b081cf89edd1f5555edc1ad2aa
     process.exit(1);
   }
 }

@@ -95,6 +95,7 @@ create index if not exists documents_transcript_idx
   on documents
   using gin (to_tsvector('polish', content));
 
+<<<<<<< HEAD
 -- Dodaj nowe indeksy dla lepszego wyszukiwania kontekstowego
 create index if not exists documents_conversation_idx 
   on documents((metadata->>'conversation_id'));
@@ -127,6 +128,8 @@ create index if not exists documents_importance_idx
 create index if not exists documents_confidence_idx 
   on documents(((metadata->>'confidence_score')::float));
 
+=======
+>>>>>>> 1d11fc25fab466b081cf89edd1f5555edc1ad2aa
 -- Usuń starą funkcję
 drop function if exists match_documents;
 

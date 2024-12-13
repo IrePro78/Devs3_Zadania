@@ -12,10 +12,14 @@
     "supabase:test-connection": "ts-node supabase/test-connection.ts",
     "supabase:test-vectors": "ts-node supabase/test-vectors.ts",
     "supabase:test-search": "ts-node supabase/test-search.ts",
+<<<<<<< HEAD
     "supabase:test-indexing": "ts-node supabase/test-indexing.ts",
     "supabase:seed": "ts-node supabase/seed-data.ts",
     "supabase:check": "ts-node supabase/check-data.ts",
     "supabase:check-embeddings": "ts-node supabase/check-embeddings.ts",
+=======
+    "supabase:seed": "ts-node supabase/seed-data.ts",
+>>>>>>> 1d11fc25fab466b081cf89edd1f5555edc1ad2aa
     "process-questions": "ts-node src/process-questions.ts"
   },
   "dependencies": {
